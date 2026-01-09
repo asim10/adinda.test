@@ -1,6 +1,6 @@
 ---
 - name: Test hello_world module with valid data
-  hello_world:
+  adinda.test.hello_world:
     firstname: "Adinda"
     lastname: "Test"
     age: 25
@@ -18,7 +18,7 @@
     fail_msg: "The module output did not match the expected user_data structure"
 
 - name: Test module failure (missing required field)
-  hello_world:
+  adinda.test.hello_world:
     firstname: "Incomplete"
   ignore_errors: yes
   register: fail_result

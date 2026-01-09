@@ -1,12 +1,8 @@
-#######################################################################################################################
-# File:             hello_world.py                                                                            #
-# Author:           Anurag Jain, Developer Advocate                                                                   #
-# Publisher:        Thales Group                                                                                      #
-# Copyright:        (c) 2022 Thales Group. All rights reserved.                                                       #
-#######################################################################################################################
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-# Create file as below
-# anugram/ciphertrust/plugins/modules/hello_world.py
+# (c) 2022 Thales Group. All rights reserved.
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
