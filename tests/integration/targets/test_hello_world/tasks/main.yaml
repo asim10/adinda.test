@@ -27,4 +27,9 @@
   assert:
     that:
       - fail_result.failed == true
-      - "'missing required arguments: lastname, age, profession' in fail_result.msg"
+      # Check for individual keywords to avoid failures due to string ordering
+      - "'age' in fail_result.msg"
+      - "'lastname' in fail_result.msg"
+      - "'profession' in fail_result.msg"
+      - "fail_result.msg is search('missing required arguments')"
+    fail_msg: "The module did not report the expected missing required arguments."
