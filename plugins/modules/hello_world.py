@@ -13,30 +13,55 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
-module: test_hello_world
-
+module: hello_world
 short_description: Test Hello World module.
-
 description:
-  - print firstname lastname age profession in json format
-
-author: Asim Dinda (@asim10)
-version_added: "0.0.1"
+  - Prints firstname, lastname, age, and profession in JSON format.
+author:
+  - Asim Dinda (@asim10)
+version_added: "1.0.0"
+options:
+  firstname:
+    description: The first name of the user.
+    type: str
+    required: true
+  lastname:
+    description: The last name of the user.
+    type: str
+    required: true
+  age:
+    description: The age of the user.
+    type: int
+    required: true
+  profession:
+    description: The profession of the user.
+    type: str
+    required: true
 '''
 
 EXAMPLES = r'''
----
 - name: Test hello_world module with valid data
-  hello_world:
+  adinda.test.hello_world:
     firstname: "Adinda"
     lastname: "Test"
     age: 25
     profession: "Engineer"
   register: result
-- debug: var=result.user_data
+
+- debug:
+    var: result.user_data
 '''
 
 RETURN = r'''
+user_data:
+    description: The dictionary containing user info.
+    returned: always
+    type: dict
+    sample:
+        firstname: "Adinda"
+        lastname: "Test"
+        age: 25
+        profession: "Engineer"
 '''
 
 # import required Python libraries as well as required Ansible core modules
