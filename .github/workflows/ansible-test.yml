@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        working-directory: ansible_collections/community/elastic
+        working-directory: ansible_collections/adinda/test
     outputs:
       matrix: ${{ steps.json-list.outputs.modules-to-test }}
 
