@@ -1,0 +1,30 @@
+---
+- name: Test hello_world module with valid data
+  hello_world:
+    firstname: "Adinda"
+    lastname: "Test"
+    age: 25
+    profession: "Engineer"
+  register: result
+
+- name: Verify module output
+  assert:
+    that:
+      - result.changed == false
+      - result.user_data.firstname == "Adinda"
+      - result.user_data.lastname == "Test"
+      - result.user_data.age == 25
+      - result.user_data.profession == "Engineer"
+    fail_msg: "The module output did not match the expected user_data structure"
+
+- name: Test module failure (missing required field)
+  hello_world:
+    firstname: "Incomplete"
+  ignore_errors: yes
+  register: fail_result
+
+- name: Verify failure on missing parameters
+  assert:
+    that:
+      - fail_result.failed == true
+      - "'missing required arguments: lastname, age, profession' in fail_result.msg"

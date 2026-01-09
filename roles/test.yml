@@ -1,0 +1,14 @@
+---
+- name: hello world
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Print hello world
+      adinda.test.hello_world:
+        firstname: "Asim"
+        lastname: "Dinda"
+        age: 32
+        profession: "Software Engineer"
+      register: output
+    - debug: var=output.user_data

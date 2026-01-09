@@ -1,0 +1,189 @@
+name: CI
+on:
+  push:
+    branches: ['main']
+
+jobs:
+
+###
+# Sanity tests (REQUIRED)
+#
+# https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
+
+  sanity:
+    name: Sanity (Ⓐ${{ matrix.ansible }})
+    strategy:
+      matrix:
+        ansible:
+          # It's important that Sanity is tested against all stable-X.Y branches
+          # Testing against `devel` may fail as new tests are added.
+          # An alternative to `devel` is the `milestone` branch with
+          # gets synchronized with `devel` every few weeks and therefore
+          # tends to be a more stable target. Be aware that it is not updated
+          # around creation of a new stable branch, this might cause a problem
+          # that two different versions of ansible-test use the same sanity test
+          # ignore.txt file.
+          # Add new versions announced in
+          # https://github.com/ansible-collections/news-for-maintainers in a timely manner,
+          # consider dropping testing against EOL versions and versions you don't support.
+          - stable-2.13
+          - stable-2.14
+          - stable-2.15
+          - stable-2.16
+        # - devel
+          - milestone
+    runs-on: >-
+      ${{ contains(fromJson(
+          '["stable-2.9", "stable-2.10", "stable-2.11"]'
+      ), matrix.ansible) && 'ubuntu-24.04' || 'ubuntu-latest' }}
+    steps:
+
+      # Run sanity tests inside a Docker container.
+      # The docker container has all the pinned dependencies that are
+      # required and all Python versions Ansible supports.
+      - name: Perform sanity testing
+        # See the documentation for the following GitHub action on
+        # https://github.com/ansible-community/ansible-test-gh-action/blob/main/README.md
+        uses: ansible-community/ansible-test-gh-action@release/v1
+        with:
+          ansible-core-version: ${{ matrix.ansible }}
+          testing-type: sanity
+          # OPTIONAL If your sanity tests require code
+          # from other collections, install them like this
+          # test-deps: >-
+          #   ansible.netcommon
+          #   ansible.utils
+          # OPTIONAL If set to true, will test only against changed files,
+          # which should improve CI performance. See limitations on
+          # https://github.com/ansible-community/ansible-test-gh-action#pull-request-change-detection
+          pull-request-change-detection: true
+
+  #units:
+  #  runs-on: ubuntu-24.04
+  #  defaults:
+  #    run:
+  #      working-directory: ansible_collections/community/elastic
+  #  steps:
+  #    - name: Check out code
+  #      uses: actions/checkout@v4
+  #      with:
+  #        path: ansible_collections/community/elastic
+
+  #    - name: Set up Python 3.6
+  #      uses: actions/setup-python@v5
+  #      with:
+  #        python-version: 3.6
+
+  #    - name: Install ansible-base (devel)
+  #      uses: nick-invision/retry@v3
+  #      with:
+  #        timeout_minutes: 3
+  #        max_attempts: 3
+  #        command: pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+
+  #    - name: Run unit tests
+  #      run: ansible-test units --docker -v --color --python 3.6 --coverage
+
+  #    - name: Generate coverage report.
+  #      run: ansible-test coverage xml -v --requirements --group-by command --group-by version
+
+  #    - uses: codecov/codecov-action@v1
+  #      with:
+  #        fail_ci_if_error: false
+
+  integration_matrix:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ansible_collections/community/elastic
+    outputs:
+      matrix: ${{ steps.json-list.outputs.modules-to-test }}
+
+    steps:
+
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          path: ansible_collections/adinda/test
+
+      - name: Generate module list
+        run: |
+          find tests/integration/targets -type d -maxdepth 1 -not -name 'setup*' | cut -d '/' -f4 | sort | awk NF | jq -sRc 'split("\n") | map(select(length > 0))' > int_test_modules.json
+
+      - name: Set output variable
+        id: json-list
+        run: |
+          output=$(cat int_test_modules.json)
+          echo "modules-to-test=$output" >> $GITHUB_OUTPUT
+          echo "$output"
+
+  integration:
+    needs: integration_matrix
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ansible_collections/adinda/test
+    strategy:
+      matrix:
+        test_module: ${{ fromJson(needs.integration_matrix.outputs.matrix) }}
+        ansible_version_combinations:
+          - ansible_version: stable-2.13
+            python_version: "3.9"
+          - ansible_version: stable-2.14
+            python_version: "3.10"
+          - ansible_version: stable-2.15
+            python_version: "3.10"
+          - ansible_version: stable-2.16
+            python_version: "3.11"
+          - ansible_version: milestone
+            python_version: "3.13"
+
+    steps:
+
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          path: ansible_collections/adinda/test
+
+      - name: Set up Python ${{ matrix.ansible_version_combinations.python_version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.ansible_version_combinations.python_version }}
+
+      - name: Install python packages
+        uses: nick-invision/retry@v3
+        with:
+          timeout_minutes: 3
+          max_attempts: 3
+          command: pip install docker requests coverage
+
+      - name: Install ansible-base (${{ matrix.ansible_version_combinations.ansible_version }})
+        uses: nick-invision/retry@v3
+        with:
+          timeout_minutes: 3
+          max_attempts: 3
+          command: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible_version_combinations.ansible_version }}.tar.gz --disable-pip-version-check
+
+      - name: Install community.general
+        uses: nick-invision/retry@v3
+        with:
+          timeout_minutes: 3
+          max_attempts: 3
+          command: ansible-galaxy collection install community.general -p ansible_collections/
+
+      - name: Install community.docker
+        uses: nick-invision/retry@v3
+        with:
+          timeout_minutes: 3
+          max_attempts: 3
+          command: ansible-galaxy collection install community.docker -p ansible_collections/
+
+      - name: >-
+          Run integration tests on Python ${{ matrix.ansible_version_combinations.python_version }} |
+          Ansible ${{ matrix.ansible_version_combinations.ansible_version }} |
+        run: ansible-test integration $ANSIBLE_TEST_OPTIONS -v --color --retry-on-error --python ${{ matrix.ansible_version_combinations.python_version }} --continue-on-error --diff --coverage ${{ matrix.elastic_module }}
+        env:
+          ANSIBLE_TEST_OPTIONS: "test_hello_world"
+
+      - name: Upload Coverage data
+        run: tests/coverage.sh
