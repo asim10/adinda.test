@@ -23,7 +23,7 @@ if find tests/output/coverage/ -mindepth 1 -name '.*' -prune -o -print -quit | g
         bash <(curl -s https://ansible-ci-files.s3.us-east-1.amazonaws.com/codecov/codecov.sh) \
             -f "${file}" \
             -F "${flags}" \
-            -t ngtrgnrttrhtrobhrthrhrt \
+            -t a0fe3d3b-14ba-4f27-83cd-c6d3d2dd9cfd \
             -X coveragepy \
             -X gcov \
             -X fix \
