@@ -14,7 +14,7 @@ if find tests/output/coverage/ -mindepth 1 -name '.*' -prune -o -print -quit | g
 
     # upload coverage report to codecov.io
     # Example: tests/output/coverage/integration=grafana_team=docker-default=python-3.6=coverage.98a48352c8fc.4207.186313
-    for file in tests/output/coverage/coverage=*.xml; do
+    for file in tests/output/reports/coverage=*.xml; do
         flags="${file##*/coverage=}"
         flags="${flags%.xml}"
         flags="${flags//=/,}"
