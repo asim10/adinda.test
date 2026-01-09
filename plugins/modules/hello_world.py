@@ -22,9 +22,6 @@ description:
 
 author: Asim Dinda (@asim10)
 version_added: "0.0.1"
-
-extends_documentation_fragment:
-  - community.elastic.login_options
 '''
 
 EXAMPLES = r'''
