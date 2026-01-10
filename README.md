@@ -27,4 +27,6 @@ collections:
 
 ## Licensing
 
-In Progress...
+This collection is primarily licensed and distributed as a whole under the GNU General Public License v3.0 or later.
+
+See [LICENSES/GPL-3.0-or-later.txt](https://github.com/asim10/adinda.test/blob/main/LICENSE) for the full text.
